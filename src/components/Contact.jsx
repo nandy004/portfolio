@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FiCornerRightDown } from "react-icons/fi";
 import { CiMail } from "react-icons/ci";
@@ -6,8 +6,17 @@ import { IoMdCall } from "react-icons/io";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { BsSendFill } from "react-icons/bs";
+import emailjs from 'emailjs-com';
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -15,6 +24,35 @@ const Contact = () => {
       easing: 'ease-in-out',
     });
   }, []);
+
+  // Handle form data change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatusMessage('Sending...');
+
+    // Use your EmailJS service ID, template ID, and user ID here
+    emailjs.sendForm('service_55aq7w4', 'template_y77kdxl', e.target, 'inqDGbJuLUx4QNyKt')
+      .then((result) => {
+        console.log(result.text);
+        setStatusMessage('Message sent successfully!');
+      }, (error) => {
+        console.log(error.text);
+        setStatusMessage('Failed to send message. Please try again.');
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
 
   return (
     <>
@@ -45,41 +83,51 @@ const Contact = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="p-6 w-full max-w-[900px] lg:mt-10 ">
+          <form onSubmit={handleSubmit} className="p-6 w-full max-w-[900px] lg:mt-10">
             <div className="flex flex-col sm:flex-row gap-5 mb-4">
               <div className="flex-grow">
                 <input
                   type="text"
-                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   placeholder="Name"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2bbcca]"
+                  required
                 />
               </div>
               <div className="flex-grow">
                 <input
                   type="email"
-                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="Email"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2bbcca]"
+                  required
                 />
               </div>
             </div>
 
             <div className="mb-4">
               <textarea
-                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
                 placeholder="Message"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2bbcca] h-[120px]"
+                required
               ></textarea>
             </div>
 
             <div className="flex justify-center lg:justify-start">
-              <button className="rounded-2xl border-2 p-2 bg-sky-200 hover:bg-[#2bbcca] hover:text-white text-gray-600 font-bold flex items-center">
-                <p className="mr-2">Send</p>
+              <button type="submit" className="rounded-2xl border-2 p-2 bg-sky-200 hover:bg-[#2bbcca] hover:text-white text-gray-600 font-bold flex items-center" disabled={isSubmitting}>
+                <p className="mr-2">{isSubmitting ? 'Sending...' : 'Send'}</p>
                 <BsSendFill />
               </button>
             </div>
-          </div>
+            {statusMessage && <p className="text-center mt-4 text-lg">{statusMessage}</p>}
+          </form>
         </div>
       </div>
     </>
